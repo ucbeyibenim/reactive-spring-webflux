@@ -50,4 +50,81 @@ class MovieInfoRepositoryIntgTest {
                 .expectNextCount(3)
                 .verifyComplete();
     }
+    @Test
+    void findById() {
+        //given
+        String movieId = "abc";
+
+        //when
+        var moviesInfoMono = movieInfoRepository.findById(movieId).log();
+
+        //then
+        StepVerifier.create(moviesInfoMono)
+                .assertNext(movieInfo -> {
+                    assert "Dark Knight Rises".equals(movieInfo.getName());
+                })
+                .verifyComplete();
+    }
+    @Test
+    void save() {
+        //given
+        MovieInfo movieInfo = new MovieInfo(null, "Batman Begins2",
+                2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2007-07-15"));
+
+        //when
+        var moviesInfoMono = movieInfoRepository.save(movieInfo).log();
+
+        //then
+        StepVerifier.create(moviesInfoMono)
+                .assertNext(movie -> {
+                    assert movie.getMovieInfoId() != null;
+                    assert "Batman Begins2".equals(movie.getName());
+                })
+                .verifyComplete();
+    }
+    @Test
+    void update() {
+        //given
+        String id = "abc";
+        Integer year = 2021;
+        var movieInfo = movieInfoRepository.findById(id).block();
+        assert movieInfo != null;
+        movieInfo.setYear(year);
+        //when
+        var moviesInfoMono = movieInfoRepository.save(movieInfo).log();
+
+        //then
+        StepVerifier.create(moviesInfoMono)
+                .assertNext(movie -> {
+                    assert movie.getYear().equals(year);
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void deleteById() {
+        //given
+        String id = "abc";
+        //when
+        movieInfoRepository.deleteById(id).block();
+        var moviesInfoFlux = movieInfoRepository.findAll().log();
+
+        //then
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(2)
+                .verifyComplete();
+    }
+
+    @Test
+    void findByYear() {
+        //given
+
+        //when
+        var moviesInfoFlux = movieInfoRepository.findByYear(2005).log();
+
+        //then
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(1)
+                .verifyComplete();
+    }
 }
